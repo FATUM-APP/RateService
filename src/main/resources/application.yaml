@@ -1,0 +1,53 @@
+spring:
+  application:
+    name: RateService
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: ${JPA_DDL_AUTO:validate}
+    open-in-view: false
+    show-sql: ${JPA_SHOW_SQL:false}
+    properties:
+      hibernate:
+        format_sql: true
+  flyway:
+    enabled: ${FLYWAY_ENABLED:true}
+    baseline-on-migrate: true
+    baseline-version: 0
+  jackson:
+    # Every timestamp is written in the time zone of the platform, with its offset.
+    time-zone: America/Bogota
+  cloud:
+    aws:
+      region:
+        static: ${AWS_REGION:us-east-1}
+
+server:
+  port: ${PORT:8080}
+
+logging:
+  level:
+    fatum.rate: ${LOG_LEVEL:DEBUG}
+    fatum.rate.exception: DEBUG
+
+# This service only registers ratings: it does not validate users and does not call UserService,
+# so there is no M2M client here. Verified and active are not stored either.
+fatum:
+  sqs:
+    # In production it stays on and the application refuses to start if the queue is unreachable.
+    # For local development, SQS_ENABLED=false keeps the API up without AWS.
+    enabled: ${SQS_ENABLED:true}
+    # Queue fed by the EventBridge rules of UserService and CatalogService.
+    calification-events-queue-name: ${QUEUE_NAME:fatum-calification-queue}
+
+app:
+  security:
+    # SECURITY_ENABLED=false leaves the API open for local development.
+    enabled: ${SECURITY_ENABLED:true}
+    issuer-uri: ${COGNITO_ISSUER_URI:https://cognito-idp.us-east-1.amazonaws.com/us-east-1_XXXXXXXXX}
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173}
